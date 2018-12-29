@@ -85,7 +85,7 @@ class Game:
 
 if __name__=='__main__':
     game = Game(2)
-
+    print('tests')
     game.place_card(Card('red',1))
     game.place_card(Card('red', 1))
     game.place_card(Card('red', 1))
