@@ -62,10 +62,12 @@ class Game:
             self.discards.append(card)
             if self.strikes == 0:
                 self.endgame()
+                return
             print('ilegal card!! strikes:' + str(self.strikes))
 
     def endgame(self):
-        pass
+        final_score = sum(self.inPlay.values())
+        print('final ' + str(final_score))
 
     def next_turn(self):
         self.turn = (self.turn+1) % len(self.players)
@@ -83,9 +85,9 @@ class Game:
 
 if __name__=='__main__':
     game = Game(2)
-    game.print_inPlay()
-    game.print_discards()
+
     game.place_card(Card('red',1))
     game.place_card(Card('red', 1))
-    game.print_inPlay()
-    game.print_discards()
+    game.place_card(Card('red', 1))
+    game.place_card(Card('red', 1))
+
