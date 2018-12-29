@@ -17,6 +17,11 @@ class Player:
         self.player_num = player_num
         self.hand = [{'card': card, 'status': 'none'} for card in hand]
 
+    def __str__(self):
+        ret_str = ''
+        for card in self.hand:
+            ret_str+=str(card['card']) + ':' + card['status'] + '|'
+        return ret_str
 
 class Game:
     def __init__(self, players_num):
@@ -31,7 +36,36 @@ class Game:
             hand = []
             for i in range(5):
                 hand.append(self.deck.pop())
-            self.players.append(Player(player, hand))
+            player = Player(player, hand)
+            self.players.append(player)
+
+    def print_deck(self):
+        print([str(card) for card in self.deck])
+
+    def print_discards(self):
+        print([str(card) for card in self.discards])
+
+    def print_inPlay(self):
+        print(self.inPlay)
+
+    def raise_clues(self):
+        self.clues = self.clues+1 if self.clues+1 < 9 else 8
+
+    def place_card(self, card:Card):
+        color = card.color
+        if self.inPlay[color] == card.val-1:
+            self.raise_clues()
+            self.inPlay[color] = card.val
+            print('legal card!! clues:'+ str(self.clues))
+        else:
+            self.strikes -= 1
+            self.discards.append(card)
+            if self.strikes == 0:
+                self.endgame()
+            print('ilegal card!! strikes:' + str(self.strikes))
+
+    def endgame(self):
+        pass
 
     def next_turn(self):
         self.turn = (self.turn+1) % len(self.players)
@@ -49,3 +83,9 @@ class Game:
 
 if __name__=='__main__':
     game = Game(2)
+    game.print_inPlay()
+    game.print_discards()
+    game.place_card(Card('red',1))
+    game.place_card(Card('red', 1))
+    game.print_inPlay()
+    game.print_discards()
