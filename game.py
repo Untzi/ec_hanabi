@@ -1,7 +1,10 @@
 from random import shuffle
+from __future__ import annotations
+
 colors = ['blue', 'red', 'yellow', 'white', 'green']
 val_count = {1: 3, 2: 2, 3: 2, 4: 2, 5: 1}
 known_status = ['color', 'val', 'color_and_val', 'none']
+
 
 class Card:
 
@@ -12,16 +15,62 @@ class Card:
     def __str__(self):
         return self.color + '-' + str(self.val)
 
+
 class Player:
     def __init__(self,player_num,hand):
         self.player_num = player_num
-        self.hand = [{'card': card, 'status': 'none'} for card in hand]
+        self.hand = [{'card': card, 'color_status': 'unknown', 'val_status': 'unknown',
+                      'turns_with_no_info': 0, 'negative_val': [], 'negative_color': []} for card in hand]
 
     def __str__(self):
         ret_str = ''
         for card in self.hand:
-            ret_str+=str(card['card']) + ':' + card['status'] + '|'
+            ret_str += str(card['card']) + ':' + card['status'] + '|'
         return ret_str
+
+    def get_next_action(self, other_players_hands, discards, inPlay):
+        pass
+
+    def discard_card(self,card,game):
+        self.hand.remove(card)
+        game.discards.append(card)
+        game.raise_clues()
+        new_card = game.deck.pop()
+        if len(game.deck) == 0:
+            pass
+        self.hand.append({'card': new_card, 'color_status': 'unknown', 'val_status': 'unknown',
+                          'turns_with_no_info': 0, 'negative_val': [], 'negative_color': []})
+
+    def raise_turns_with_no_info(self):
+        for card in self.hand:
+            card['turns_with_no_info'] += 1
+
+    def tell_info(self, player:Player, info, game:Game):
+            if game.clues == 0:
+                raise PermissionError('not allowed to give info')
+
+            for card in player.hand:
+                if card['color'] == info:
+                    card['color_status'] = 'known'
+                    card['turns_with_no_info'] = 0
+                elif card['val'] == info:
+                    card['val_status'] = 'known'
+                    card['turns_with_no_info'] = 0
+                else:
+                    if info in colors:
+                        card['negative_color'].append(info)
+                    else:
+                        card['negative_val'].append(info)
+            game.clues -= 1
+
+    def player_place_card(self, card: Card, game: Game):
+        game.place_card(card)
+        new_card = game.deck.pop()
+        self.hand.append({'card': new_card, 'color_status': 'unknown', 'val_status': 'unknown',
+                          'turns_with_no_info': 0, 'negative_val': [], 'negative_color': []})
+
+
+
 
 class Game:
     def __init__(self, players_num):
