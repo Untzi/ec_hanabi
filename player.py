@@ -8,6 +8,7 @@ colors = ['blue', 'red', 'yellow', 'white', 'green']
 known_status = ['color', 'val', 'color_and_val', 'none']
 values = [1,2,3,4,5]
 
+
 class Player:
     def __init__(self,player_num,hand):
         self.player_num = player_num
@@ -35,7 +36,7 @@ class Player:
         game.raise_clues()
         new_card = game.deck.pop()
         if len(game.deck) == 0:
-            pass #TODO: see how to treat this
+            game.last_round = True
         self.hand.append(PlayerCard(new_card))
 
     def tell_info(self, player:Player, info, game:Game):
@@ -50,12 +51,12 @@ class Player:
                     card.val_status = 'known'
                     card.turns_with_no_info = 0
                 else:
-                    if info in colors:
+                    if info in colors: #info is a color...
                         card.negative_color.append(info)
-                    else:
+                    else: #info is a value
                         card.negative_val.append(info)
                     card.color_status = 'known' if len(set(colors) - set(card.negative_color)) == 1 else 'unknown'
-                    card.val_status = 'known' if len(set([1,2,3,4,5]) - set(card.negative_val)) == 1 else 'unknown'
+                    card.val_status = 'known' if len(set([1, 2, 3, 4, 5]) - set(card.negative_val)) == 1 else 'unknown'
 
             game.clues -= 1
 
