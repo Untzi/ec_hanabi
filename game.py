@@ -89,15 +89,18 @@ class Game:
         while not self.last_round:
             self.next_turn()
             curr_player = self.players[self.turn] #type: Player
+            curr_player.get_next_action(self.playersp[self.turn+1 % len(self.players)], self.discards, self.inPlay)
 
-
-
+            if len(self.deck) == 0:
+                self.last_round =True
         for i in range(len(self.players)):
             pass
         self.endgame()
 
 if __name__=='__main__':
     game = Game(2)
+    game.run_game()
+
     game.print_discards()
     game.print_inPlay()
     game.print_deck()
@@ -106,5 +109,4 @@ if __name__=='__main__':
     game.place_card(Card('red', 1))
     game.place_card(Card('red', 1))
     print(Game.generate_counts())
-
 
