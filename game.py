@@ -1,6 +1,6 @@
 from __future__ import annotations
 from random import shuffle
-from card import Card
+from card import Card, PlayerCard
 from player import Player
 
 colors = ['blue', 'red', 'yellow', 'white', 'green']
@@ -69,6 +69,13 @@ class Game:
         shuffle(deck)
         return deck
 
+    @staticmethod
+    def generate_counts():
+        to_ret = {}
+        for color in colors:
+            to_ret[color] = [1, 1, 1, 2, 2, 3, 3, 4, 4, 5]
+        return to_ret
+
     def print_deck(self):
         print([str(card) for card in self.deck])
 
@@ -98,5 +105,6 @@ if __name__=='__main__':
     game.place_card(Card('red', 1))
     game.place_card(Card('red', 1))
     game.place_card(Card('red', 1))
+    print(Game.generate_counts())
 
 

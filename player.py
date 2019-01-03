@@ -54,6 +54,9 @@ class Player:
                         card.negative_color.append(info)
                     else:
                         card.negative_val.append(info)
+                    card.color_status = 'known' if len(set(colors) - set(card.negative_color)) == 1 else 'unknown'
+                    card.val_status = 'known' if len(set([1,2,3,4,5]) - set(card.negative_val)) == 1 else 'unknown'
+
             game.clues -= 1
 
     def get_playable_card_or_none(self,inPlay):
