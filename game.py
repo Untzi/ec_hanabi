@@ -1,13 +1,10 @@
 from __future__ import annotations
 from random import shuffle
 from card import Card
-import player
-# # from player import Player
 from player import Player
 
 colors = ['blue', 'red', 'yellow', 'white', 'green']
 val_count = {1: 3, 2: 2, 3: 2, 4: 2, 5: 1}
-
 
 
 class Game:
@@ -52,12 +49,22 @@ class Game:
         self.turn = (self.turn+1) % len(self.players)
         return self.turn
 
+    def get_card_list_by_color(self,cards):
+        ret = {color: [] for color in colors}
+        for card in cards:
+            ret[card.color].append(card.val)
+
+    def get_card_list_by_val(self, cards):
+        ret = {value: [] for value in [1,2,3,4,5]}
+        for card in cards:
+            ret[card.val].append(card.color)
+
     @staticmethod
     def create_deck():
         deck = []
         for color in colors:
             for val, count in val_count.items():
-                cards = [Card(color, val) for i in range(count)]
+                cards = [Card(color, val) for _ in range(count)]
                 deck = deck + cards
         shuffle(deck)
         return deck
@@ -81,6 +88,7 @@ class Game:
         for i in range(len(self.players)):
             pass
         self.endgame()
+
 if __name__=='__main__':
     game = Game(2)
     game.print_discards()

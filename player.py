@@ -1,11 +1,12 @@
 from __future__ import annotations
 from card import Card, PlayerCard
+from random import sample
 # from game import Game
 
 
 colors = ['blue', 'red', 'yellow', 'white', 'green']
 known_status = ['color', 'val', 'color_and_val', 'none']
-
+values = [1,2,3,4,5]
 
 class Player:
     def __init__(self,player_num,hand):
@@ -54,14 +55,33 @@ class Player:
                     else:
                         card.negative_val.append(info)
             game.clues -= 1
-    # def get_playable_card_or_none(self,inPlay):
-    #     for card in self.hand:
-    #         c = card['card']  # type: Card
-    #         card_value = c.val if card_value['color']
-    #         card_color = c.color
-    #         for desk_card in inPlay: #type: Card
-    #             if desk_card.val == card_value -1 and desk_card.color == desk_card.color:
-    #                 return c
+
+    def get_playable_card_or_none(self,inPlay):
+        for card in self.hand:
+            for desk_card in inPlay: #type: Card
+                if desk_card.val == card.val -1 and card.color == desk_card.color and \
+                        card.color_status != 'unknown' and card.val_status != 'unknown':
+                    return card
+        return None
+
+    def get_random_info(self):
+        to_rand = sample(['val', 'color'])
+        if to_rand == 'val':
+            random_info = sample(values)
+        else:
+            random_info = sample(colors)
+        return random_info
+
+    def get_random_info_from_player(self, player_hand):
+        sampled_Card = sample(player_hand)
+        return sample([sampled_Card.color, sampled_Card.val])
+
+    def discard_oldest_with_least_info(self):
+        to_discard = sample(self.hand) #type: PlayerCard
+        for card in self.hand:
+            if (card.color_status == 'unknown' and card.val_status == 'unknown'
+                    and (card.turns_with_no_info < to_discard.turns_with_no_info)):
+                to_discard = card
 
     def raise_turns_with_no_info(self):
         for card in self.hand:
