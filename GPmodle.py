@@ -43,7 +43,11 @@ toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.ex
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
 def run_game(individual):
-
+    player_action_tree = gp.compile(individual, pset)
+    # run the game
+    game1 = Game(2, player_action_tree)
+    game1.run_game()
+    return game1.endgame()
 
 
 # here we call the game

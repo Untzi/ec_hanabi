@@ -2,7 +2,6 @@
 from random import shuffle
 from card import Card, PlayerCard
 from player import Player
-from functools import partial
 from rule_set import RuleSet
 
 colors = ['blue', 'red', 'yellow', 'white', 'green']
@@ -102,12 +101,7 @@ class Game:
 if __name__=='__main__':
     game = Game(2)
     # game.run_game()
-    player1 = game.players[0]
-    #
-    bla = partial(RuleSet.has_playable_card, player= player1)
-    print( bla() )
-    # p = partial(print,end = 'lol')
-    # p('haha')
+
     game.print_discards()
     game.print_inPlay()
     game.print_deck()
