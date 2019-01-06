@@ -1,7 +1,9 @@
-from __future__ import annotations
+# from __future__ import annotations
 from random import shuffle
 from card import Card, PlayerCard
 from player import Player
+from functools import partial
+from rule_set import RuleSet
 
 colors = ['blue', 'red', 'yellow', 'white', 'green']
 val_count = {1: 3, 2: 2, 3: 2, 4: 2, 5: 1}
@@ -99,8 +101,13 @@ class Game:
 
 if __name__=='__main__':
     game = Game(2)
-    game.run_game()
-
+    # game.run_game()
+    player1 = game.players[0]
+    #
+    bla = partial(RuleSet.has_playable_card, player= player1)
+    print( bla() )
+    # p = partial(print,end = 'lol')
+    # p('haha')
     game.print_discards()
     game.print_inPlay()
     game.print_deck()

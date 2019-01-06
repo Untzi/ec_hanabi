@@ -1,9 +1,12 @@
+from __future__ import annotations
 from card import Card
 from player import Player , PlayerCard
-from game import Game
+# from game import Game
+
 
 class RuleSet:
-
+    def __init__(self):
+        pass
     @staticmethod
     def is_card_playable(card,game):
         inPlay = game.inPlay
@@ -24,7 +27,7 @@ class RuleSet:
 
     @staticmethod
     def has_safe_card(player:Player, game, return_card = None):
-        counts = Game.generate_counts()
+        counts = game.generate_counts()
         #removing cards from discards and inPlay
         for card in game.discards:
             counts[card.color].remove(card.val)

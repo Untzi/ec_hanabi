@@ -1,7 +1,7 @@
-from __future__ import annotations
+# from __future__ import annotations
 from card import Card, PlayerCard
 from random import sample
-# from game import Game
+
 
 
 colors = ['blue', 'red', 'yellow', 'white', 'green']
@@ -39,7 +39,7 @@ class Player:
             pass #TODO: see how to treat this
         self.hand.append(PlayerCard(new_card))
 
-    def tell_info(self, player:Player, info, game:Game):
+    def tell_info(self, player, info, game):
             if game.clues == 0:
                 raise PermissionError('not allowed to give info')
 
