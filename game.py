@@ -1,5 +1,5 @@
 # from __future__ import annotations
-from random import shuffle
+from random import shuffle, sample
 from card import Card, PlayerCard
 from player import Player
 from functools import partial
@@ -8,23 +8,32 @@ from rule_set import RuleSet
 colors = ['blue', 'red', 'yellow', 'white', 'green']
 val_count = {1: 3, 2: 2, 3: 2, 4: 2, 5: 1}
 
+def print_name(func):
+    def echo_func(*func_args, **func_kwargs):
+        print(func.__name__)
+        return func(*func_args, **func_kwargs)
+    echo_func.__name__ = func.__name__
+    return echo_func
 
 class Game:
-    def __init__(self, players_num):
+    def __init__(self, players_num, player_action_tree):
         self.deck = self.create_deck()
         self.discards = []
         self.clues = 8
         self.strikes = 3
-        self.turn = -1
+        self.turn = 0
         self.last_round = False
         self.players = []
         self.inPlay = {color: 0 for color in colors}
+        self.player_action = player_action_tree
+        self.stop = False
         for player in range(players_num):
             hand = []
             for i in range(5):
                 hand.append(self.deck.pop())
-            player = Player(player, hand)
+            player = Player(player, hand, self)
             self.players.append(player)
+            print(player)
 
     def raise_clues(self):
         self.clues = self.clues+1 if self.clues+1 < 9 else 8
@@ -39,14 +48,17 @@ class Game:
             self.strikes -= 1
             self.discards.append(card)
             if self.strikes == 0:
-                self.endgame()
+                self.last_round = True
+                self.stop = True
                 return
             print('ilegal card!! strikes:' + str(self.strikes))
 
     def endgame(self):
         final_score = sum(self.inPlay.values())
         print('final ' + str(final_score))
+        return (final_score)
 
+    @print_name
     def next_turn(self):
         self.turn = (self.turn+1) % len(self.players)
         return self.turn
@@ -87,17 +99,83 @@ class Game:
     def print_inPlay(self):
         print(self.inPlay)
 
+    def get_next_action(self, player_action_tree):
+        player_action_tree()
+
     def run_game(self):
-        while not self.last_round:
+        turn_num = 0
+        while not self.last_round and turn_num < 1000 and not self.stop:
+            print("player num ", self.turn)
             self.next_turn()
             curr_player = self.players[self.turn] #type: Player
-            curr_player.get_next_action(self.playersp[self.turn+1 % len(self.players)], self.discards, self.inPlay)
+            self.get_next_action(self.player_action)
 
             if len(self.deck) == 0:
-                self.last_round =True
-        for i in range(len(self.players)):
-            pass
-        self.endgame()
+                self.last_round = True
+            turn_num +=1
+        if not self.stop:
+            for i in range(len(self.players)):
+                self.next_turn()
+                curr_player = self.players[self.turn]  # type: Player
+                self.get_next_action(self.player_action)
+        return self.endgame()
+
+
+    def is_card_playable(self, card):
+        inPlay = self.inPlay
+        return inPlay[card.color] == (card.val - 1)
+
+    @print_name
+    def has_playable_card(self, out1, out2):
+        to_ret = None
+        for card in self.players[self.turn].hand: #type: PlayerCard
+            if card.color_status != 'unknown' and card.val_status != 'unknown':
+                if self.is_card_playable(card):
+                        out1()
+
+        if to_ret == None:
+            out2()
+        else:
+            out2()
+
+    @print_name
+    def play_playable_card(self):
+        for card in self.players[self.turn].hand: #type: PlayerCard
+            if card.color_status != 'unknown' and card.val_status != 'unknown':
+                if self.is_card_playable(card):
+                    self.inPlay[card.color] = card.val
+                    self.players[self.turn].hand.remove(card)
+                    if len(self.deck) > 0:
+                        self.players[self.turn].hand.append(self.deck.pop())
+                    if self.clues < 8:
+                        self.clues += 1
+
+    @print_name
+    def can_tell_about_ones(self, out1, out2):
+        if self.clues == 0:
+            out2()
+
+        for player in self.players:
+            if player != self.players[self.turn]:
+                for card in player.hand:
+                    if card.val == 1 and card.val_status == 'unknown':
+                        out1()
+        out2()
+
+    @print_name
+    def tell_about_ones(self):
+        for player in self.players:
+            if player != self.players[self.turn]:
+                for card in player.hand:
+                    if card.val == 1 and card.val_status == 'unknown':
+                        self.players[self.turn].tell_info(player, 1, self)
+                        return
+
+    @print_name
+    def play_random_card(self):
+        card = sample(self.players[self.turn].hand, 1)[0]
+        self.players[self.turn].player_place_card(card, self)
+
 
 if __name__=='__main__':
     game = Game(2)

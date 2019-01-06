@@ -9,9 +9,10 @@ known_status = ['color', 'val', 'color_and_val', 'none']
 values = [1,2,3,4,5]
 
 class Player:
-    def __init__(self,player_num,hand):
+    def __init__(self,player_num,hand, game):
         self.player_num = player_num
         self.hand = [PlayerCard(card) for card in hand]
+        self.game = game
 
     def __str__(self):
         ret_str = ''
@@ -21,44 +22,53 @@ class Player:
         ret_str+= '--------------------------------------------------------\n'
         return ret_str
 
-    def get_next_action(self, other_players_hands, discards, inPlay):
-        action = sample(self.get_random_info(), self.discard_oldest_with_least_info(),self.get_random_info_from_player())
-        action()
+    def get_next_action(self, game):
+        # action = sample(self.get_random_info(), self.discard_oldest_with_least_info(),self.get_random_info_from_player())
+        # action()
+        game.player_action_tree()
 
-    def player_place_card(self, card: Card, game):
+    def player_place_card(self, card: PlayerCard, game):
+        print("player_place_card")
         game.place_card(card)
-        new_card = game.deck.pop()
-        self.hand.append(PlayerCard(new_card))
+        if len(game.deck)> 0:
+            new_card = game.deck.pop()
+            self.hand.append(PlayerCard(new_card))
+        self.hand.remove(card)
+
 
     def discard_card(self, card, game):
+        print("discard_card")
         self.hand.remove(card)
         game.discards.append(Card(card.color, card.val))
         game.raise_clues()
-        new_card = game.deck.pop()
+        if len(game.deck) > 0:
+            new_card = game.deck.pop()
+            self.hand.append(PlayerCard(new_card))
         if len(game.deck) == 0:
-            pass #TODO: see how to treat this
-        self.hand.append(PlayerCard(new_card))
+            game.last_round = True
+
 
     def tell_info(self, player, info, game):
-            if game.clues == 0:
-                raise PermissionError('not allowed to give info')
+        print("tell_info")
+        if game.clues == 0:
+            raise PermissionError('not allowed to give info')
 
-            for card in player.hand:
-                if card.color == info: #type:PlayerCard
-                    card.color_status = 'known'
-                    card.turns_with_no_info = 0
-                elif card.val == info:
-                    card.val_status = 'known'
-                    card.turns_with_no_info = 0
+        for card in player.hand:
+            if card.color == info: #type:PlayerCard
+                card.color_status = 'known'
+                card.turns_with_no_info = 0
+            elif card.val == info:
+                card.val_status = 'known'
+                card.turns_with_no_info = 0
+            else:
+                if info in colors:
+                    card.negative_color.append(info)
                 else:
-                    if info in colors:
-                        card.negative_color.append(info)
-                    else:
-                        card.negative_val.append(info)
-                    card.color_status = 'known' if len(set(colors) - set(card.negative_color)) == 1 else 'unknown'
-                    card.val_status = 'known' if len(set([1,2,3,4,5]) - set(card.negative_val)) == 1 else 'unknown'
+                    card.negative_val.append(info)
+                card.color_status = 'known' if len(set(colors) - set(card.negative_color)) == 1 else 'unknown'
+                card.val_status = 'known' if len(set([1,2,3,4,5]) - set(card.negative_val)) == 1 else 'unknown'
 
-            game.clues -= 1
+        game.clues -= 1
 
     def get_playable_card_or_none(self,inPlay):
         for card in self.hand:
@@ -90,3 +100,4 @@ class Player:
     def raise_turns_with_no_info(self):
         for card in self.hand:
             card.turns_with_no_info += 1
+
