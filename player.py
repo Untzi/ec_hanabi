@@ -28,16 +28,14 @@ class Player:
         game.player_action_tree()
 
     def player_place_card(self, card: PlayerCard, game):
-        print("player_place_card")
         game.place_card(card)
-        if len(game.deck)> 0:
+        if len(game.deck) > 0:
             new_card = game.deck.pop()
             self.hand.append(PlayerCard(new_card))
         self.hand.remove(card)
 
 
     def discard_card(self, card, game):
-        print("discard_card")
         self.hand.remove(card)
         game.discards.append(Card(card.color, card.val))
         game.raise_clues()
@@ -49,7 +47,6 @@ class Player:
 
 
     def tell_info(self, player, info, game):
-        print("tell_info")
         if game.clues == 0:
             raise PermissionError('not allowed to give info')
 

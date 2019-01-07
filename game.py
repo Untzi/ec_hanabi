@@ -33,7 +33,7 @@ class Game:
                 hand.append(self.deck.pop())
             player = Player(player, hand, self)
             self.players.append(player)
-            print(player)
+            # print(player)
 
     def raise_clues(self):
         self.clues = self.clues+1 if self.clues+1 < 9 else 8
@@ -43,22 +43,26 @@ class Game:
         if self.inPlay[color] == card.val-1:
             self.raise_clues()
             self.inPlay[color] = card.val
-            print('legal card!! clues: '+ str(self.clues))
+            # print('legal card!! clues: '+ str(self.clues))
         else:
-            self.strikes -= 1
-            self.discards.append(card)
-            if self.strikes == 0:
-                self.last_round = True
-                self.stop = True
-                return
-            print('ilegal card!! strikes:' + str(self.strikes))
+            if self.strikes > 0:
+                self.strikes -= 1
+                self.discards.append(card)
+                if self.strikes == 0:
+                    self.last_round = True
+                    self.stop = True
+                    return
+            # print('ilegal card!! strikes:' + str(self.strikes))
 
     def endgame(self):
         final_score = sum(self.inPlay.values())
-        print('final ' + str(final_score))
+        # print('final ' + str(final_score))
+        fd = open('results.txt','a')
+        fd.write(str(final_score) + '\n')
+        fd.close()
         return (final_score)
 
-    @print_name
+    # @print_name
     def next_turn(self):
         self.turn = (self.turn+1) % len(self.players)
         return self.turn
@@ -105,7 +109,7 @@ class Game:
     def run_game(self):
         turn_num = 0
         while not self.last_round and turn_num < 1000 and not self.stop:
-            print("player num ", self.turn)
+            # print("player num ", self.turn)
             self.next_turn()
             curr_player = self.players[self.turn] #type: Player
             self.get_next_action(self.player_action)
@@ -125,20 +129,20 @@ class Game:
         inPlay = self.inPlay
         return inPlay[card.color] == (card.val - 1)
 
-    @print_name
+    # @print_name
     def has_playable_card(self, out1, out2):
         to_ret = None
         for card in self.players[self.turn].hand: #type: PlayerCard
             if card.color_status != 'unknown' and card.val_status != 'unknown':
                 if self.is_card_playable(card):
-                        out1()
+                    out1()
+                    to_ret = card
 
         if to_ret == None:
             out2()
-        else:
-            out2()
 
-    @print_name
+
+    # @print_name
     def play_playable_card(self):
         for card in self.players[self.turn].hand: #type: PlayerCard
             if card.color_status != 'unknown' and card.val_status != 'unknown':
@@ -150,8 +154,9 @@ class Game:
                     if self.clues < 8:
                         self.clues += 1
 
-    @print_name
+    # @print_name
     def can_tell_about_ones(self, out1, out2):
+        out1_flag = False
         if self.clues == 0:
             out2()
 
@@ -160,9 +165,11 @@ class Game:
                 for card in player.hand:
                     if card.val == 1 and card.val_status == 'unknown':
                         out1()
-        out2()
+                        out1_flag = True
+        if not out1_flag:
+            out2()
 
-    @print_name
+    # @print_name
     def tell_about_ones(self):
         for player in self.players:
             if player != self.players[self.turn]:
@@ -171,10 +178,11 @@ class Game:
                         self.players[self.turn].tell_info(player, 1, self)
                         return
 
-    @print_name
+    # @print_name
     def play_random_card(self):
         card = sample(self.players[self.turn].hand, 1)[0]
-        self.players[self.turn].player_place_card(card, self)
+        if len(self.deck) > 0:
+            self.players[self.turn].player_place_card(card, self)
 
 
 if __name__=='__main__':

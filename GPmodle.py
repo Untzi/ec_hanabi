@@ -12,7 +12,11 @@ from card import *
 from game import *
 from player import *
 import operator
-
+import os
+try:
+    os.remove('results.txt')
+except:
+    pass
 
 game1 = Game(2, None)
 
@@ -74,15 +78,30 @@ toolbox.register("mate", gp.cxOnePoint)
 toolbox.register("expr_mut", gp.genFull, min_=0, max_=2)
 toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut, pset=pset)
 
-pop = toolbox.population(n=30)
-hof = tools.HallOfFame(1)
+pop = toolbox.population(n=10)
+hof = tools.HallOfFame(10)
 stats = tools.Statistics(lambda ind: ind.fitness.values)
 stats.register("avg", numpy.mean)
 stats.register("std", numpy.std)
 stats.register("min", numpy.min)
 stats.register("max", numpy.max)
 
-algorithms.eaSimple(pop, toolbox, 0.7, 0.3, 100, stats, halloffame=hof)
+algorithms.eaSimple(population=pop, toolbox=toolbox, cxpb=0.9, mutpb=0.1, ngen=100,
+                    stats=stats, halloffame=hof, verbose=True)
 
 print("end")
-# return pop, hof, stats
+expr = toolbox.individual()
+nodes, edges, labels = gp.graph(expr)
+
+# import matplotlib.pyplot as plt
+# import networkx as nx
+#
+# g = nx.Graph()
+# g.add_nodes_from(nodes)
+# g.add_edges_from(edges)
+# pos = nx.graphviz_layout(g, prog="dot")
+#
+# nx.draw_networkx_nodes(g, pos)
+# nx.draw_networkx_edges(g, pos)
+# nx.draw_networkx_labels(g, pos, labels)
+# plt.show()
