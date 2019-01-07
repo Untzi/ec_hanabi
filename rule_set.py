@@ -42,4 +42,3 @@ class RuleSet:
                         counts[card.color].remove(card.val)
                 else:
                     counts[card.color].remove(card.val)
-        

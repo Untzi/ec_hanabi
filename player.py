@@ -1,6 +1,7 @@
 # from __future__ import annotations
 from card import Card, PlayerCard
-from random import sample
+# from random import sample
+import random
 
 
 
@@ -10,6 +11,7 @@ values = [1,2,3,4,5]
 
 class Player:
     def __init__(self,player_num,hand, game):
+        # random.seed(1)
         self.player_num = player_num
         self.hand = [PlayerCard(card) for card in hand]
         self.game = game
@@ -23,7 +25,7 @@ class Player:
         return ret_str
 
     def get_next_action(self, game):
-        # action = sample(self.get_random_info(), self.discard_oldest_with_least_info(),self.get_random_info_from_player())
+        # action = random.sample(self.get_random_info(), self.discard_oldest_with_least_info(),self.get_random_info_from_player())
         # action()
         game.player_action_tree()
 
@@ -31,19 +33,22 @@ class Player:
         game.place_card(card)
         if len(game.deck) > 0:
             new_card = game.deck.pop()
+            if len(game.deck) == 0:
+                game.last_round = True
             self.hand.append(PlayerCard(new_card))
         self.hand.remove(card)
 
-
     def discard_card(self, card, game):
+        if len(self.hand) < 5 and game.last_round:
+            return
         self.hand.remove(card)
         game.discards.append(Card(card.color, card.val))
         game.raise_clues()
         if len(game.deck) > 0:
             new_card = game.deck.pop()
             self.hand.append(PlayerCard(new_card))
-        if len(game.deck) == 0:
-            game.last_round = True
+            if len(game.deck) == 0:
+                game.last_round = True
 
 
     def tell_info(self, player, info, game):
@@ -67,7 +72,7 @@ class Player:
 
         game.clues -= 1
 
-    def get_playable_card_or_none(self,inPlay):
+    def get_playable_card_or_none(self, inPlay):
         for card in self.hand:
             for desk_card in inPlay: #type: Card
                 if desk_card.val == card.val -1 and card.color == desk_card.color and \
@@ -76,23 +81,22 @@ class Player:
         return None
 
     def get_random_info(self):
-        to_rand = sample(['val', 'color'])
+        to_rand = random.sample(['val', 'color'])
         if to_rand == 'val':
-            random_info = sample(values)
+            random_info = random.sample(values)
         else:
-            random_info = sample(colors)
+            random_info = random.sample(colors)
         return random_info
 
-    def get_random_info_from_player(self, player_hand):
-        sampled_Card = sample(player_hand)
-        return sample([sampled_Card.color, sampled_Card.val])
-
     def discard_oldest_with_least_info(self):
-        to_discard = sample(self.hand) #type: PlayerCard
+        if not self.game.last_round and len(self.hand)==0:
+            print('problem')
+        to_discard = random.sample(self.hand, 1)[0] #type: PlayerCard
         for card in self.hand:
             if (card.color_status == 'unknown' and card.val_status == 'unknown'
                     and (card.turns_with_no_info < to_discard.turns_with_no_info)):
                 to_discard = card
+        self.discard_card(to_discard, self.game)
 
     def raise_turns_with_no_info(self):
         for card in self.hand:

@@ -1,5 +1,5 @@
 # from __future__ import annotations
-from random import shuffle, sample
+import random
 from card import Card, PlayerCard
 from player import Player
 from functools import partial
@@ -17,6 +17,7 @@ def print_name(func):
 
 class Game:
     def __init__(self, players_num, player_action_tree):
+        # random.seed(1)
         self.deck = self.create_deck()
         self.discards = []
         self.clues = 8
@@ -35,6 +36,24 @@ class Game:
             self.players.append(player)
             # print(player)
 
+    def reset(self, players_num, player_action_tree):
+        self.deck = self.create_deck()
+        self.discards = []
+        self.clues = 8
+        self.strikes = 3
+        self.turn = 0
+        self.last_round = False
+        self.players = []
+        self.inPlay = {color: 0 for color in colors}
+        self.player_action = player_action_tree
+        self.stop = False
+        for player in range(players_num):
+            hand = []
+            for i in range(5):
+                hand.append(self.deck.pop())
+            player = Player(player, hand, self)
+            self.players.append(player)
+
     def raise_clues(self):
         self.clues = self.clues+1 if self.clues+1 < 9 else 8
 
@@ -48,10 +67,10 @@ class Game:
             if self.strikes > 0:
                 self.strikes -= 1
                 self.discards.append(card)
-                if self.strikes == 0:
-                    self.last_round = True
-                    self.stop = True
-                    return
+            if self.strikes == 0:
+                self.last_round = True
+                self.stop = True
+                return
             # print('ilegal card!! strikes:' + str(self.strikes))
 
     def endgame(self):
@@ -84,7 +103,7 @@ class Game:
             for val, count in val_count.items():
                 cards = [Card(color, val) for _ in range(count)]
                 deck = deck + cards
-        shuffle(deck)
+        random.shuffle(deck)
         return deck
 
     @staticmethod
@@ -108,20 +127,25 @@ class Game:
 
     def run_game(self):
         turn_num = 0
-        while not self.last_round and turn_num < 1000 and not self.stop:
+        # print("start game")
+        while (self.last_round == False) and (turn_num < 600) and (self.stop != True):
             # print("player num ", self.turn)
-            self.next_turn()
+
+            # print('turna ', self.turn)
             curr_player = self.players[self.turn] #type: Player
             self.get_next_action(self.player_action)
 
             if len(self.deck) == 0:
                 self.last_round = True
-            turn_num +=1
-        if not self.stop:
+            self.next_turn()
+            turn_num += 1
+        if self.stop != True:
             for i in range(len(self.players)):
-                self.next_turn()
+                # print('turnb ', self.turn)
                 curr_player = self.players[self.turn]  # type: Player
                 self.get_next_action(self.player_action)
+                self.next_turn()
+
         return self.endgame()
 
 
@@ -151,14 +175,23 @@ class Game:
                     self.players[self.turn].hand.remove(card)
                     if len(self.deck) > 0:
                         self.players[self.turn].hand.append(self.deck.pop())
+                    if len(self.deck) == 0:
+                        self.last_round = True
                     if self.clues < 8:
                         self.clues += 1
+
+    def can_tell(self, out1, out2):
+        if self.clues > 0:
+            out1()
+        else:
+            out2()
 
     # @print_name
     def can_tell_about_ones(self, out1, out2):
         out1_flag = False
         if self.clues == 0:
             out2()
+            return
 
         for player in self.players:
             if player != self.players[self.turn]:
@@ -180,9 +213,16 @@ class Game:
 
     # @print_name
     def play_random_card(self):
-        card = sample(self.players[self.turn].hand, 1)[0]
-        if len(self.deck) > 0:
+        try:
+            card = random.sample(self.players[self.turn].hand, 1)[0]
             self.players[self.turn].player_place_card(card, self)
+        except:
+            i = 1
+
+
+
+    def discard_oldest_with_least_info(self):
+        self.players[self.turn].discard_oldest_with_least_info()
 
 
 if __name__=='__main__':

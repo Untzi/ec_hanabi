@@ -36,23 +36,27 @@ def if_play(condition, out1, out2):
 def can_tell_about_ones1(out1, out2):
     return partial(game1.can_tell_about_ones, out1, out2)
 
-
 def has_playable_card1(out1, out2):
     return partial(game1.has_playable_card, out1, out2)
+
+def can_tell1(out1, out2):
+    return partial(game1.can_tell, out1, out2)
 
 
 pset = gp.PrimitiveSet("MAIN", 0)
 pset.addPrimitive(can_tell_about_ones1, 2)
 pset.addPrimitive(has_playable_card1, 2)
+pset.addPrimitive(can_tell1, 2)
 pset.addTerminal(game1.play_playable_card)
 pset.addTerminal(game1.tell_about_ones)
 pset.addTerminal(game1.play_random_card)
+pset.addTerminal(game1.discard_oldest_with_least_info)
 
 creator.create("FitnessMax", base.Fitness, weights=(1.0, ))
 creator.create("Individual", gp.PrimitiveTree, fitness=creator.FitnessMax)
 
 toolbox = base.Toolbox()
-toolbox.register("expr_init", gp.genFull, pset=pset, min_=6, max_=10)
+toolbox.register("expr_init", gp.genFull, pset=pset, min_=4, max_=10)
 
 toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.expr_init)
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
@@ -60,15 +64,20 @@ toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
 def run_game(individual):
     player_action_tree = gp.compile(individual, pset)
+    n = 2
     # run the game
     if player_action_tree == None:
         return 0
-    generate_game = partial(game1.__init__, players_num = 2, player_action_tree=player_action_tree)
-    generate_game()
-    game1.run_game()
+    ls = []
+    for i in range(n):
+        game1.reset(2, player_action_tree=player_action_tree)
+        # generate_game = partial(game1.__init__, players_num = 2, player_action_tree=player_action_tree)
+        # generate_game()
+        ls.append(game1.run_game())
     # if game1.endgame() == 0:
     #     return float(1)
-    return game1.endgame(),
+    avg = sum(ls) / float(len(ls))
+    return avg,
 
 
 # here we call the game
@@ -78,8 +87,8 @@ toolbox.register("mate", gp.cxOnePoint)
 toolbox.register("expr_mut", gp.genFull, min_=0, max_=2)
 toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut, pset=pset)
 
-pop = toolbox.population(n=10)
-hof = tools.HallOfFame(10)
+pop = toolbox.population(n=30)
+hof = tools.HallOfFame(3)
 stats = tools.Statistics(lambda ind: ind.fitness.values)
 stats.register("avg", numpy.mean)
 stats.register("std", numpy.std)
@@ -90,8 +99,8 @@ algorithms.eaSimple(population=pop, toolbox=toolbox, cxpb=0.9, mutpb=0.1, ngen=1
                     stats=stats, halloffame=hof, verbose=True)
 
 print("end")
-expr = toolbox.individual()
-nodes, edges, labels = gp.graph(expr)
+# expr = toolbox.individual()
+# nodes, edges, labels = gp.graph(expr)
 
 # import matplotlib.pyplot as plt
 # import networkx as nx
