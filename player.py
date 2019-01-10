@@ -28,6 +28,10 @@ class Player:
         # action = random.sample(self.get_random_info(), self.discard_oldest_with_least_info(),self.get_random_info_from_player())
         # action()
         game.player_action_tree()
+        for player in game.players:
+            player.raise_turns_with_no_info()
+
+
 
     def player_place_card(self, card: PlayerCard, game):
         game.place_card(card)
@@ -53,15 +57,17 @@ class Player:
 
     def tell_info(self, player, info, game):
         if game.clues == 0:
-            raise PermissionError('not allowed to give info')
-
+            # raise PermissionError('not allowed to give info')
+            return
+        if info in ["1", "2", "3", "4", "5"]:
+            info = int(info)
         for card in player.hand:
             if card.color == info: #type:PlayerCard
                 card.color_status = 'known'
-                card.turns_with_no_info = 0
+                card.turns_with_no_info = -1
             elif card.val == info:
                 card.val_status = 'known'
-                card.turns_with_no_info = 0
+                card.turns_with_no_info = -1
             else:
                 if info in colors:
                     card.negative_color.append(info)
@@ -101,4 +107,61 @@ class Player:
     def raise_turns_with_no_info(self):
         for card in self.hand:
             card.turns_with_no_info += 1
+
+    def deduction(self, return_card=None):
+        counts = self.game.generate_counts()
+        # removing cards from discards and inPlay
+        for card in self.game.discards:
+            counts[card.color].remove(card.val)
+        for color in self.game.inPlay:
+            for i in range(self.game.inPlay[color]):
+                if i == 0:
+                    continue
+                counts[color].remove(i)
+        # remove known cards from the players hand
+        for p in self.game.players:  # type: Player
+            for card in p.hand:  # type: PlayerCard
+                if p.player_num == self.player_num:
+                    if card.val_status != 'unknown' and card.color_status != 'unknown':
+                        try:
+                            counts[card.color].remove(card.val)
+                        except ValueError:
+                            print('value error')
+                            continue
+                else:
+                    try:
+                        counts[card.color].remove(card.val)
+                    except ValueError:
+                        print('value error')
+                        continue
+        # deducing if only one value is known about color
+        for card in self.hand:
+            if card.val_status == 'unknown' and card.color_status != 'unknown':
+                if len(set(counts[card.color])) == 1:
+                    card.val_status = 'known'
+                    counts[card.color].remove(card.val)
+
+        reverse_counts = Player.inverse_dict(counts)
+        for card in self.hand:
+            if card.val_status != 'unknown' and card.color_status == 'unknown':
+                if len(set(reverse_counts[card.val])):
+                    card.color_status = 'known'
+                    counts[card.color].remove(card.val)
+        return counts
+
+    @staticmethod
+    def inverse_dict(m):
+        inv_map = {}
+        for k, v in m.items():
+            for val in v:
+                inv_map[val] = inv_map.get(val, [])
+                inv_map[val].append(k)
+        return inv_map
+
+    def update_safe_probabilities(self, counts):
+        for card in self.hand:
+            if card.color_status != 'unknown':
+                next_val = self.game.get_next_playable(card.color)
+                if len(counts[card.color]) != 0:
+                    card.safe_to_play_prob = counts[card.color].count(next_val)//len(counts[card.color])
 

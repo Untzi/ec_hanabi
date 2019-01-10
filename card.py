@@ -26,7 +26,7 @@ class PlayerCard(Card):
         self.turns_with_no_info = 0
         self.negative_val = []
         self.negative_color = []
-
+        self.safe_to_play_prob = 0
     def __eq__(self, other):
         if isinstance(other, PlayerCard):
             color_and_val_equals = super().__eq__(other)

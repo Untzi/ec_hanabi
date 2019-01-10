@@ -25,20 +25,44 @@ class RuleSet:
         else:
             return False, False
 
-    @staticmethod
-    def has_safe_card(player:Player, game, return_card = None):
-        counts = game.generate_counts()
-        #removing cards from discards and inPlay
-        for card in game.discards:
-            counts[card.color].remove(card.val)
-        for color in game.inPlay:
-            for i in range(game.inPlay[color]+1):
-                counts[color].remove(i)
-        #remove known cards from the players hand
-        for p in game.players: #type: Player
-            for card in p.hand: #type: PlayerCard
-                if p.player_num == player.player_num:
-                    if card.val_status != 'unknown' and card.color_status != 'unknown':
-                        counts[card.color].remove(card.val)
-                else:
-                    counts[card.color].remove(card.val)
+
+    #
+    # @staticmethod
+    # def deduction(player:Player, game, return_card = None):
+    #     counts = game.generate_counts()
+    #     #removing cards from discards and inPlay
+    #     for card in game.discards:
+    #         counts[card.color].remove(card.val)
+    #     for color in game.inPlay:
+    #         for i in range(game.inPlay[color]+1):
+    #             counts[color].remove(i)
+    #     #remove known cards from the players hand
+    #     for p in game.players: #type: Player
+    #         for card in p.hand: #type: PlayerCard
+    #             if p.player_num == player.player_num:
+    #                 if card.val_status != 'unknown' and card.color_status != 'unknown':
+    #                     try:
+    #                         counts[card.color].remove(card.val)
+    #                     except ValueError:
+    #                         print('value error')
+    #                         continue
+    #             else:
+    #                 try:
+    #                     counts[card.color].remove(card.val)
+    #                 except ValueError:
+    #                     print('value error')
+    #                     continue
+    #     #deducing if only one value is known about color
+    #     for card in player.hand:
+    #         if card.val_status == 'unknown' and card.color_status != 'unknown':
+    #             if len(set(counts[card.color])) == 1:
+    #                 card.val_status = 'known'
+    #                 counts[card.color].remove(card.val)
+    #
+    #     reverse_counts = RuleSet.inverse_dict(counts)
+    #     for card in player.hand:
+    #         if card.val_status != 'unknown' and card.color_status == 'unknown':
+    #             if len(set(reverse_counts[card.val])):
+    #                 card.color_status = 'known'
+    #                 counts[card.color].remove(card.val)
+    #     return counts
