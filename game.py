@@ -236,7 +236,6 @@ class Game:
             i = 1
 
 
-
     def discard_oldest_with_least_info(self):
         self.players[self.turn].discard_oldest_with_least_info()
 
@@ -366,6 +365,57 @@ class Game:
                             self.players[self.turn].discard_card(card, self)
                             return
 
+    def count_info_from_player(self, player, info):
+        count = 0
+        for card in player.hand:
+            if card.color == info:  # type:PlayerCard
+                count += 1
+            elif card.val == info:
+                count += 1
+        return count
+
+    def tell_most_information(self):
+        curr_player = self.get_curr_player()
+        most_info = 1
+        app_of_most_info = 0
+        player_to_tell = self.players[(self.turn + 1) % len(self.players)]
+        for player in self.players:
+            if player.player_num != curr_player.player_num:
+                for card in player.hand:
+                    count = self.count_info_from_player(player, card.val)
+                    if count > app_of_most_info:
+                        app_of_most_info = count
+                        most_info = card.val
+                        player_to_tell = player
+                    count = self.count_info_from_player(player, card.color)
+                    if count > app_of_most_info:
+                        app_of_most_info = count
+                        most_info = card.color
+                        player_to_tell = player
+
+        curr_player.tell_info(player_to_tell, most_info, self)
+
+    def has_unknown_card(self, out1, out2):
+        curr_player = self.get_curr_player()
+        for player in self.players:
+            if player.player_num != curr_player.player_num:
+                for card in player.hand:
+                    if card.color_status == 'unknown' and card.val_status == 'unknown':
+                        out1()
+                        return
+        out2()
+
+    def tell_unknown_card(self):
+        curr_player = self.get_curr_player()
+        for player in self.players:
+            if player.player_num != curr_player.player_num:
+                for card in player.hand:
+                    if card.color_status == 'unknown' and card.val_status == 'unknown':
+                        to_tell = random.sample([card.val, card.color], 1)[0]
+                        curr_player.tell_info(player, to_tell, self)
+                        return
+
+        self.tell_random()
 
 if __name__=='__main__':
     # game = Game(2)

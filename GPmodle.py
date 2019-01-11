@@ -11,8 +11,8 @@ from game import *
 import datetime
 import os
 
-params = {'population_size':100,'ngens':50, 'init_tree_size_min': 4, 'init_tree_size_max': 10, 'pcx': 0.9,
-          'pmut': 0.25, 'tourn_size': 4,'mut_tree_min': 1, 'mut_tree_max': 3 }
+params = {'population_size':200,'ngens':500, 'init_tree_size_min': 7, 'init_tree_size_max': 10, 'pcx': 0.9,
+          'pmut': 0.25, 'tourn_size': 5, 'mut_tree_min': 1, 'mut_tree_max': 3, 'best_select': 40, 'tourn_select': 160}
 try:
     os.remove('results.txt')
 except:
@@ -40,13 +40,13 @@ def if_play(condition, out1, out2):
         out2()
 
 
-def can_tell_about_ones1(out1, out2):
+def can_tell_about_ones(out1, out2):
     return partial(game1.can_tell_about_ones, out1, out2)
 
 def can_tell_about_fives(out1,out2):
     return partial(game1.can_tell_fives, out1, out2)
 
-def has_playable_card1(out1, out2):
+def has_playable_card(out1, out2):
     return partial(game1.has_playable_card, out1, out2)
 
 def can_tell1(out1, out2):
@@ -61,24 +61,32 @@ def is_other_has_playable_card(out1, out2):
 def has_useless_card(out1, out2):
     return partial(game1.has_useless_card, out1, out2)
 
+def has_unknown_card(out1, out2):
+    return partial(game1.has_unknown_card, out1, out2)
+
 pset = gp.PrimitiveSet("MAIN", 0)
-pset.addPrimitive(can_tell_about_ones1, 2)
-pset.addPrimitive(has_playable_card1, 2)
+pset.addPrimitive(can_tell_about_ones, 2)
 pset.addPrimitive(can_tell1, 2)
+pset.addPrimitive(can_tell_about_fives, 2)
+pset.addPrimitive(has_playable_card, 2)
 pset.addPrimitive(has_safe_card, 2)
 pset.addPrimitive(is_other_has_playable_card, 2)
-pset.addPrimitive(can_tell_about_fives, 2)
 pset.addPrimitive(has_useless_card, 2)
+pset.addPrimitive(has_unknown_card, 2)
 
 pset.addTerminal(game1.play_playable_card)
-pset.addTerminal(game1.tell_about_ones)
 pset.addTerminal(game1.play_random_card)
-pset.addTerminal(game1.discard_oldest_with_least_info)
 pset.addTerminal(game1.play_safest_card)
-pset.addTerminal(game1.tell_random)
 pset.addTerminal(game1.play_just_hinted)
+
+pset.addTerminal(game1.tell_about_ones)
+pset.addTerminal(game1.tell_random)
 pset.addTerminal(game1.tell_about_fives)
 pset.addTerminal(game1.tell_playable_card)
+pset.addTerminal(game1.tell_most_information)
+pset.addTerminal(game1.tell_unknown_card)
+
+pset.addTerminal(game1.discard_oldest_with_least_info)
 pset.addTerminal(game1.discard_useless_card)
 
 
@@ -110,12 +118,20 @@ def run_game(individual):
     return avg,
 
 
+def comb_selection(individuals, len):
+    pop1= tools.selBest(individuals, k=params['best_select'])
+    pop2 = tools.selTournament(individuals, k=params['tourn_select'], tournsize=params['tourn_size'])
+    population = pop1 + pop2
+    return population
+
 # here we call the game
 toolbox.register("evaluate", run_game)
-toolbox.register("select", tools.selTournament, tournsize=params['tourn_size'])
+# toolbox.register("select", tools.selTournament, tournsize=params['tourn_size'])
+toolbox.register("select", comb_selection)
 toolbox.register("mate", gp.cxOnePoint)
 toolbox.register("expr_mut", gp.genFull, min_=params['mut_tree_min'], max_=params['mut_tree_max'])
 toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut, pset=pset)
+toolbox.register("mutate", gp.mutNodeReplacement, pset=pset)
 
 pop = toolbox.population(n=params['population_size'])
 hof = tools.HallOfFame(7)
@@ -143,7 +159,7 @@ g.add_nodes_from(nodes)
 g.add_edges_from(edges)
 nx.draw(g)
 plt.savefig("simple_path.png") # save as png
-plt.show() # display
+# plt.show() # display
 print('filename: ', fname)
 # pos = nx.graphviz_layout(g, prog="dot")
 #
